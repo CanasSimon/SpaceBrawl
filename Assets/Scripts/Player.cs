@@ -1,21 +1,46 @@
-﻿using UnityEngine;
+﻿using System;
+using Cinemachine;
+using Photon.Pun;
+using UnityEngine;
 
-public class Player : MonoBehaviour
+public class Player : MonoBehaviourPun
 {
-    [SerializeField] private GameObject bullet;
-    [SerializeField] private Transform bulletSpawner;
-    [SerializeField] private float shootSpeed;
-    private float shootCdTimeStamp;
+    #region Movement
+    [Header("Movement")]
+    [SerializeField] private float speed = .1f;
+    [SerializeField] private float turnSpeed = .2f;
     
-    [SerializeField] private float speed;
-    [SerializeField] private float turnSpeed;
-
     private float moveX;
     private float moveY;
+    #endregion
+    
+    #region Bullets
+    [Header("Bullets")]
+    [SerializeField] private GameObject bullet;
+    [SerializeField] private Transform bulletSpawner;
+    [SerializeField] private float shootSpeed = 0.1f;
+    private float shootCdTimeStamp;
+    #endregion
 
-    // Update is called once per frame
+    #region Stats
+    [Header("Stats")]
+    [SerializeField] private int health;
+    [SerializeField] private int attack;
+    #endregion
+    
+    private void Start()
+    {
+        var mainCam = Camera.main;
+        if (mainCam != null)
+            mainCam.GetComponentInChildren<CinemachineVirtualCamera>().m_Follow = transform;
+        else
+            Debug.Log("Error: No Camera in scene");
+    }
+
     private void Update()
     {
+        if(!photonView.IsMine && PhotonNetwork.IsConnected) return;
+        
         Move();
 
         if (Time.time > shootCdTimeStamp && Input.GetButtonDown("Fire1"))
