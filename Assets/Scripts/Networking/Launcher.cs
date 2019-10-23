@@ -2,81 +2,96 @@
 using Photon.Pun;
 using Photon.Realtime;
 using UnityEngine;
+using UnityEngine.UI;
+using Random = UnityEngine.Random;
 
 public class Launcher : MonoBehaviourPunCallbacks
 {
     private bool isConnecting;
     
-    [SerializeField] private byte maxPlayersPerRoom = 2;
-    
     private string gameVersion = "1";
 
-    [SerializeField] private GameObject controlPanel;
-    [SerializeField] private GameObject progressLabel;
+    [Header("Login Panel")]
+    public GameObject LoginPanel;
+    public InputField PlayerNameInput;
 
-    private void Awake()
+    [Header("Selection Panel")]
+    public GameObject SelectionPanel;
+
+    [Header("Create Room Panel")]
+    public GameObject CreateRoomPanel;
+
+    public InputField RoomNameInputField;
+    public InputField MaxPlayersInputField;
+
+    [Header("Join Random Room Panel")]
+    public GameObject JoinRandomRoomPanel;
+
+    [Header("Inside Room Panel")]
+    public GameObject InsideRoomPanel;
+
+    public Button StartGameButton;
+    public GameObject PlayerListEntryPrefab;
+    
+    private const string playerNamePrefKey = "PlayerName";
+    
+    public void Awake()
     {
         PhotonNetwork.AutomaticallySyncScene = true;
-    }
 
-    private void Start()
-    {
-        progressLabel.SetActive(false);
-        controlPanel.SetActive(true);
-    }
+        string defaultName = string.Empty;
 
-    public void Connect()
-    {
-        isConnecting = true;
-        
-        progressLabel.SetActive(true);
-        controlPanel.SetActive(false);
-        
-        if (PhotonNetwork.IsConnected)
+        if (PlayerPrefs.HasKey(playerNamePrefKey))
         {
-            PhotonNetwork.JoinRandomRoom();
+            defaultName = PlayerPrefs.GetString(playerNamePrefKey);
+            PlayerNameInput.text = defaultName;
         }
-        else
+        
+        PhotonNetwork.NickName = defaultName;
+    }
+
+    public void SetPlayerName(string newName)
+    {
+        if (string.IsNullOrEmpty(newName))
         {
-            PhotonNetwork.GameVersion = gameVersion;
-            PhotonNetwork.ConnectUsingSettings();
+            Debug.LogError("Player Name is null or empty");
+            return;
         }
-    }
 
-    #region Connection issue handling
-
-    public override void OnConnectedToMaster()
-    {
-        Debug.Log("Successfully connected");
-
-        if (isConnecting) PhotonNetwork.JoinRandomRoom();
-    }
-
-    public override void OnDisconnected(DisconnectCause cause)
-    {
-        progressLabel.SetActive(false);
-        controlPanel.SetActive(true);
-        Debug.Log("Failed to connect");
+        PhotonNetwork.NickName = newName;
+        
+        PlayerPrefs.SetString(playerNamePrefKey, newName);
     }
     
-    #endregion
+    private void SetActivePanel(string activePanel)
+    {
+        LoginPanel.SetActive(activePanel.Equals(LoginPanel.name));
+        SelectionPanel.SetActive(activePanel.Equals(SelectionPanel.name));
+        CreateRoomPanel.SetActive(activePanel.Equals(CreateRoomPanel.name));
+        JoinRandomRoomPanel.SetActive(activePanel.Equals(JoinRandomRoomPanel.name));
+        InsideRoomPanel.SetActive(activePanel.Equals(InsideRoomPanel.name));
+    }
+    
+    public override void OnConnectedToMaster()
+    {
+        SetActivePanel(SelectionPanel.name);
+    }
+    
+    public override void OnCreateRoomFailed(short returnCode, string message)
+    {
+        SetActivePanel(SelectionPanel.name);
+    }
 
-    #region Room Connection Handling
-
+    public override void OnJoinRoomFailed(short returnCode, string message)
+    {
+        SetActivePanel(SelectionPanel.name);
+    }
+    
     public override void OnJoinRandomFailed(short returnCode, string message)
     {
-        PhotonNetwork.CreateRoom(null, new RoomOptions {MaxPlayers = maxPlayersPerRoom});
+        string roomName = "Room " + Random.Range(1000, 10000);
+
+        var options = new RoomOptions {MaxPlayers = 8};
+        PhotonNetwork.CreateRoom(roomName, options, null);
     }
-
-    public override void OnJoinedRoom()
-    {
-        Debug.Log("Joined room");
-
-        if (PhotonNetwork.CurrentRoom.PlayerCount >= 1)
-        {
-            PhotonNetwork.LoadLevel("Room for 2");
-        }
-    }
-
-    #endregion
 }
