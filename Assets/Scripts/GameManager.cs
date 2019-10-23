@@ -1,9 +1,32 @@
-﻿using Photon.Pun;
+﻿using System;
+using Photon.Pun;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
+    [SerializeField] private GameObject playerPrefab;
+
+    private void Start()
+    {
+        if (playerPrefab == null)
+        {
+            Debug.LogError("<Color=Red><a>Missing</a></Color> playerPrefab Reference. " +
+                           "Please set it up in GameObject 'Game Manager'",this);
+        }
+        else
+        {
+            if (Player.localPlayerInstance == null)
+            {
+                PhotonNetwork.Instantiate(playerPrefab.name, new Vector3(0, 0, 0), Quaternion.identity, 0);
+            }
+            else
+            {
+                Debug.LogFormat("Ignoring scene load for {0}", SceneManagerHelper.ActiveSceneName);
+            }
+        }
+    }
+
     public override void OnLeftRoom()
     {
         SceneManager.LoadScene("Launcher");

@@ -2,9 +2,12 @@
 using Cinemachine;
 using Photon.Pun;
 using UnityEngine;
+using UnityEngine.UI;
 
-public class Player : MonoBehaviourPun
+public class Player : MonoBehaviourPun, IPunObservable
 {
+    public static GameObject localPlayerInstance;
+    
     #region Movement
     [Header("Movement")]
     [SerializeField] private float speed = .1f;
@@ -24,17 +27,37 @@ public class Player : MonoBehaviourPun
 
     #region Stats
     [Header("Stats")]
-    [SerializeField] private int health;
+    [SerializeField] private int maxHealth;
     [SerializeField] private int attack;
+    public int Health;
+    
+    [SerializeField] private GameObject playerUiPrefab;
     #endregion
+
+    private void Awake()
+    {
+        if (photonView.IsMine)
+        {
+            localPlayerInstance = gameObject;
+        }
+        
+        DontDestroyOnLoad(gameObject);
+    }
     
     private void Start()
     {
         var mainCam = Camera.main;
         if (mainCam != null)
+        {
             mainCam.GetComponentInChildren<CinemachineVirtualCamera>().m_Follow = transform;
+        }
         else
+        {
             Debug.Log("Error: No Camera in scene");
+        }
+        
+        var uiGo = Instantiate(playerUiPrefab);
+        uiGo.SendMessage ("SetTarget", this, SendMessageOptions.RequireReceiver);
     }
 
     private void Update()
@@ -49,14 +72,28 @@ public class Player : MonoBehaviourPun
         }
     }
 
+    void IPunObservable.OnPhotonSerializeView(PhotonStream stream, PhotonMessageInfo info)
+    {
+        if (stream.IsWriting)
+        {
+            stream.SendNext(Health);
+        }
+        else
+        {
+            Health = (int) stream.ReceiveNext();
+        }
+    }
+    
     private void Move()
     {
         moveX = Input.GetAxis("Horizontal");
         moveY = Input.GetAxis("Vertical");
         var moveVec = new Vector3(moveX, moveY) * speed;
 
-        transform.position = Vector3.MoveTowards(transform.position, transform.position + moveVec, 1);
-        
+        var position = transform.position;
+        position = Vector3.MoveTowards(position, position + moveVec, 1);
+        transform.position = position;
+
         if (moveVec != Vector3.zero)
             transform.rotation = 
                 Quaternion.Slerp(transform.rotation, Quaternion.LookRotation(Vector3.forward, moveVec), turnSpeed);

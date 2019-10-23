@@ -39,9 +39,9 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 8558452745099366294}
-  - component: {fileID: 8558452745099366293}
   - component: {fileID: 8558452745099366288}
   - component: {fileID: 8558452745099366295}
+  - component: {fileID: 8558452745099366293}
   - component: {fileID: 4863613062215466887}
   - component: {fileID: 5574959989681720006}
   m_Layer: 0
@@ -67,23 +67,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!114 &8558452745099366293
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 8558452745099366292}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0437b2bf8d3a69a4aa17fd77aa551b24, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  bullet: {fileID: 1195925096744254297, guid: e07e2468b04fba84090f243fccef6d33, type: 3}
-  bulletSpawner: {fileID: 1553292300284237406}
-  shootSpeed: 0.1
-  speed: 0.1
-  turnSpeed: 0.2
 --- !u!50 &8558452745099366288
 Rigidbody2D:
   serializedVersion: 4
@@ -121,6 +104,28 @@ CapsuleCollider2D:
   m_Offset: {x: 0, y: -0.050000012}
   m_Size: {x: 0.70000005, y: 0.9}
   m_Direction: 0
+--- !u!114 &8558452745099366293
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 8558452745099366292}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0437b2bf8d3a69a4aa17fd77aa551b24, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  speed: 0.1
+  turnSpeed: 0.2
+  bullet: {fileID: 1195925096744254297, guid: e07e2468b04fba84090f243fccef6d33, type: 3}
+  bulletSpawner: {fileID: 1553292300284237406}
+  shootSpeed: 0.1
+  maxHealth: 20
+  attack: 1
+  Health: 0
+  playerUiPrefab: {fileID: 2591127850954989722, guid: 93dc5a9053727bb4f9b917bc8c17d575,
+    type: 3}
 --- !u!114 &4863613062215466887
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -140,6 +145,7 @@ MonoBehaviour:
   OwnershipTransfer: 0
   ObservedComponents:
   - {fileID: 5574959989681720006}
+  - {fileID: 8558452745099366293}
   viewIdField: 0
   InstantiationId: 0
   isRuntimeInstantiated: 0
@@ -224,8 +230,8 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 0
-  m_SortingLayer: 0
+  m_SortingLayerID: 1028861679
+  m_SortingLayer: 2
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: cf23f5339e8e2bd49b5c64b183a97586, type: 3}
   m_Color: {r: 1, g: 1, b: 1, a: 1}
