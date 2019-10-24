@@ -13,7 +13,7 @@ TagManager:
   - UI
   - 
   - 
-  - 
+  - Overlay
   - 
   - 
   - 
@@ -47,9 +47,9 @@ TagManager:
   - name: Entities
     uniqueID: 1028861679
     locked: 0
-  - name: Overlay
-    uniqueID: 1863907885
-    locked: 0
   - name: UI
     uniqueID: 1765102983
+    locked: 0
+  - name: Overlay
+    uniqueID: 1863907885
     locked: 0

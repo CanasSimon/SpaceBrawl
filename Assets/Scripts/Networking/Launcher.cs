@@ -1,5 +1,8 @@
 ﻿using System;
+using System.Collections.Generic;
+using ExitGames.Client.Photon;
 using Photon.Pun;
+using Photon.Pun.Demo.Asteroids;
 using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.UI;
@@ -18,12 +21,6 @@ public class Launcher : MonoBehaviourPunCallbacks
     [Header("Selection Panel")]
     public GameObject SelectionPanel;
 
-    [Header("Create Room Panel")]
-    public GameObject CreateRoomPanel;
-
-    public InputField RoomNameInputField;
-    public InputField MaxPlayersInputField;
-
     [Header("Join Random Room Panel")]
     public GameObject JoinRandomRoomPanel;
 
@@ -31,7 +28,9 @@ public class Launcher : MonoBehaviourPunCallbacks
     public GameObject InsideRoomPanel;
 
     public Button StartGameButton;
-    public GameObject PlayerListEntryPrefab;
+    public GameObject PlayerInRoomPrefab;
+    
+    private Dictionary<int, GameObject> playerListEntries;
     
     private const string playerNamePrefKey = "PlayerName";
     
@@ -50,28 +49,7 @@ public class Launcher : MonoBehaviourPunCallbacks
         PhotonNetwork.NickName = defaultName;
     }
 
-    public void SetPlayerName(string newName)
-    {
-        if (string.IsNullOrEmpty(newName))
-        {
-            Debug.LogError("Player Name is null or empty");
-            return;
-        }
-
-        PhotonNetwork.NickName = newName;
-        
-        PlayerPrefs.SetString(playerNamePrefKey, newName);
-    }
-    
-    private void SetActivePanel(string activePanel)
-    {
-        LoginPanel.SetActive(activePanel.Equals(LoginPanel.name));
-        SelectionPanel.SetActive(activePanel.Equals(SelectionPanel.name));
-        CreateRoomPanel.SetActive(activePanel.Equals(CreateRoomPanel.name));
-        JoinRandomRoomPanel.SetActive(activePanel.Equals(JoinRandomRoomPanel.name));
-        InsideRoomPanel.SetActive(activePanel.Equals(InsideRoomPanel.name));
-    }
-    
+    #region PUN methods
     public override void OnConnectedToMaster()
     {
         SetActivePanel(SelectionPanel.name);
@@ -94,4 +72,104 @@ public class Launcher : MonoBehaviourPunCallbacks
         var options = new RoomOptions {MaxPlayers = 8};
         PhotonNetwork.CreateRoom(roomName, options, null);
     }
+    
+    public override void OnJoinedRoom()
+    {
+        SetActivePanel(InsideRoomPanel.name);
+
+        if (playerListEntries == null)
+        {
+            playerListEntries = new Dictionary<int, GameObject>();
+        }
+
+        foreach (var p in PhotonNetwork.PlayerList)
+        {
+            var entry = Instantiate(PlayerInRoomPrefab);
+            entry.transform.SetParent(InsideRoomPanel.transform);
+            entry.transform.localScale = Vector3.one;
+            entry.GetComponent<PlayerInRoom>().Initialize(p.ActorNumber, p.NickName);
+
+            playerListEntries.Add(p.ActorNumber, entry);
+        }
+
+        var props = new Hashtable
+        {
+            {AsteroidsGame.PLAYER_LOADED_LEVEL, false}
+        };
+        PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+    }
+    
+    public override void OnPlayerEnteredRoom(Player newPlayer)
+    {
+        var entry = Instantiate(PlayerInRoomPrefab);
+        entry.transform.SetParent(InsideRoomPanel.transform);
+        entry.transform.localScale = Vector3.one;
+        entry.GetComponent<PlayerInRoom>().Initialize(newPlayer.ActorNumber, newPlayer.NickName);
+
+        playerListEntries.Add(newPlayer.ActorNumber, entry);
+    }
+    
+    
+    public override void OnPlayerLeftRoom(Player otherPlayer)
+    {
+        Destroy(playerListEntries[otherPlayer.ActorNumber].gameObject);
+        playerListEntries.Remove(otherPlayer.ActorNumber);
+    }
+
+    #endregion
+
+    #region UI Methods
+    public void SetPlayerName(string newName)
+    {
+        if (string.IsNullOrEmpty(newName))
+        {
+            Debug.LogError("Player Name is null or empty");
+            return;
+        }
+
+        PhotonNetwork.NickName = newName;
+        
+        PlayerPrefs.SetString(playerNamePrefKey, newName);
+    }
+    
+    public void OnBackButtonClicked()
+    {
+        if (PhotonNetwork.InLobby)
+        {
+            PhotonNetwork.LeaveLobby();
+        }
+
+        SetActivePanel(SelectionPanel.name);
+    }
+    
+    private void SetActivePanel(string activePanel)
+    {
+        LoginPanel.SetActive(activePanel.Equals(LoginPanel.name));
+        SelectionPanel.SetActive(activePanel.Equals(SelectionPanel.name));
+        JoinRandomRoomPanel.SetActive(activePanel.Equals(JoinRandomRoomPanel.name));
+        InsideRoomPanel.SetActive(activePanel.Equals(InsideRoomPanel.name));
+    }
+    
+    public void OnLoginButtonClicked()
+    {
+        string playerName = PlayerNameInput.text;
+
+        if (!playerName.Equals(""))
+        {
+            PhotonNetwork.LocalPlayer.NickName = playerName;
+            PhotonNetwork.ConnectUsingSettings();
+        }
+        else
+        {
+            Debug.LogError("Player Name is invalid.");
+        }
+    }
+    
+    public void OnJoinRandomRoomButtonClicked()
+    {
+        SetActivePanel(JoinRandomRoomPanel.name);
+
+        PhotonNetwork.JoinRandomRoom();
+    }
+    #endregion
 }

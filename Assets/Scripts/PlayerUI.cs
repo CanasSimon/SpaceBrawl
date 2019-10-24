@@ -4,7 +4,7 @@ using UnityEngine.UI;
 
 public class PlayerUI : MonoBehaviour
 {
-    private Player target;
+    private PlayerController target;
     
     [SerializeField] private Text playerNameText;
     [SerializeField] private Slider playerHealthSlider;
@@ -22,7 +22,7 @@ public class PlayerUI : MonoBehaviour
         canvasGroup = GetComponent<CanvasGroup>();
     }
 
-    public void SetTarget(Player playerTarget)
+    public void SetTarget(PlayerController playerTarget)
     {
         if (playerTarget == null)
         {
