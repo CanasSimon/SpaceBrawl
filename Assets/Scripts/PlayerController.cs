@@ -4,7 +4,7 @@ using Photon.Pun;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class Player : MonoBehaviourPun, IPunObservable
+public class PlayerController : MonoBehaviourPun, IPunObservable
 {
     public static GameObject localPlayerInstance;
     

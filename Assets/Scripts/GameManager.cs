@@ -16,7 +16,7 @@ public class GameManager : MonoBehaviourPunCallbacks
         }
         else
         {
-            if (Player.localPlayerInstance == null)
+            if (PlayerController.localPlayerInstance == null)
             {
                 PhotonNetwork.Instantiate(playerPrefab.name, new Vector3(0, 0, 0), Quaternion.identity, 0);
             }
@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public override void OnLeftRoom()
     {
-        SceneManager.LoadScene("Launcher");
+        SceneManager.LoadScene("Lobby");
     }
 
     private void LoadArena()
