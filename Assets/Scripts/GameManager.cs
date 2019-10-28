@@ -29,7 +29,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 
     public override void OnLeftRoom()
     {
-        SceneManager.LoadScene("Launcher");
+        SceneManager.LoadScene("Lobby");
     }
 
     private void LoadArena()
