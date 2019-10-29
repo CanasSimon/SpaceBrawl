@@ -13,7 +13,7 @@ GameObject:
   - component: {fileID: 8372482322195638355}
   - component: {fileID: 8372482322195638352}
   m_Layer: 5
-  m_Name: Leave
+  m_Name: LeaveButton
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0

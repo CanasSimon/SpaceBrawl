@@ -34,5 +34,10 @@ MonoBehaviour:
   - DestroySpaceship
   - Fire
   - RespawnSpaceship
+  - DestroyBullet
+  - Shoot
+  - UpdateHealth
+  - Destroy
+  - DisplayWinScreen
   DisableAutoOpenWizard: 1
   ShowSettings: 0

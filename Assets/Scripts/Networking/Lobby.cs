@@ -1,198 +1,234 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
 using ExitGames.Client.Photon;
 using Photon.Pun;
 using Photon.Pun.Demo.Asteroids;
 using Photon.Realtime;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 using Random = UnityEngine.Random;
 
-namespace Networking
+public class Lobby : MonoBehaviourPunCallbacks
 {
-    public class Lobby : MonoBehaviourPunCallbacks
-    {
-        private bool isConnecting;
-    
-        private string gameVersion = "1";
+	private bool isConnecting;
 
-        [Header("Login Panel")]
-        public GameObject LoginPanel;
-        public InputField PlayerNameInput;
+	private string gameVersion = "1";
 
-        [Header("Selection Panel")]
-        public GameObject SelectionPanel;
+	[Header("Login Panel")] 
+	[SerializeField] private GameObject loginPanel;
+	[SerializeField] private InputField playerNameInput;
 
-        [Header("Join Random Room Panel")]
-        public GameObject JoinRandomRoomPanel;
+	[Header("Selection Panel")] 
+	[SerializeField] private GameObject selectionPanel;
+	[SerializeField] private InputField newRoomNameInput;
+	[SerializeField] private InputField roomNameInput;
 
-        [Header("Inside Room Panel")]
-        public GameObject InsideRoomPanel;
+	[Header("Join Random Room Panel")] 
+	[SerializeField] private GameObject joinRandomRoomPanel;
 
-        public GameObject PlayerInRoomPrefab;
-    
-        private Dictionary<int, GameObject> playerListEntries;
-    
-        private const string playerNamePrefKey = "PlayerName";
-    
-        public void Awake()
-        {
-            PhotonNetwork.AutomaticallySyncScene = true;
+	[Header("Inside Room Panel")] 
+	[SerializeField] private Text roomNameText;
+	[SerializeField] private GameObject insideRoomPanel;
+	[SerializeField] private Button gameStartButton;
+	[SerializeField] private GameObject playerInRoomPrefab;
 
-            string defaultName = string.Empty;
+	private Dictionary<int, GameObject> playerListEntries;
 
-            if (PlayerPrefs.HasKey(playerNamePrefKey))
-            {
-                defaultName = PlayerPrefs.GetString(playerNamePrefKey);
-                PlayerNameInput.text = defaultName;
-            }
-        
-            PhotonNetwork.NickName = defaultName;
-        }
+	private const string playerNamePrefKey = "PlayerName";
 
-        #region PUN methods
-        public override void OnConnectedToMaster()
-        {
-            SetActivePanel(SelectionPanel.name);
-        }
-    
-        public override void OnCreateRoomFailed(short returnCode, string message)
-        {
-            SetActivePanel(SelectionPanel.name);
-        }
+	//Gets the "PlayerName" PrefKey and puts it in the name InputField
+	public void Awake()
+	{
+		if (PhotonNetwork.IsConnected)
+		{
+			SetActivePanel(selectionPanel.name);
+			return;
+		}
+		
+		PhotonNetwork.AutomaticallySyncScene = true;
 
-        public override void OnJoinRoomFailed(short returnCode, string message)
-        {
-            SetActivePanel(SelectionPanel.name);
-        }
-    
-        public override void OnJoinRandomFailed(short returnCode, string message)
-        {
-            string roomName = "Room " + Random.Range(1000, 10000);
+		string defaultName = string.Empty;
 
-            var options = new RoomOptions {MaxPlayers = 8};
-            PhotonNetwork.CreateRoom(roomName, options);
-        }
-    
-        public override void OnJoinedRoom()
-        {
-            SetActivePanel(InsideRoomPanel.name);
+		if (PlayerPrefs.HasKey(playerNamePrefKey))
+		{
+			defaultName = PlayerPrefs.GetString(playerNamePrefKey);
+			playerNameInput.text = defaultName;
+		}
 
-            if (playerListEntries == null)
-            {
-                playerListEntries = new Dictionary<int, GameObject>();
-            }
+		PhotonNetwork.NickName = defaultName;
+	}
 
-            foreach (var p in PhotonNetwork.PlayerList)
-            {
-                var entry = Instantiate(PlayerInRoomPrefab, InsideRoomPanel.transform, true);
-                entry.transform.localScale = Vector3.one;
-                entry.GetComponent<PlayerInRoom>().Initialize(p.ActorNumber, p.NickName);
+	#region PUN methods
+	public override void OnConnectedToMaster()
+	{
+		SetActivePanel(selectionPanel.name);
+	}
 
-                playerListEntries.Add(p.ActorNumber, entry);
-            }
+	public override void OnCreateRoomFailed(short returnCode, string message)
+	{
+		SetActivePanel(selectionPanel.name);
+	}
 
-            var props = new Hashtable
-            {
-                {AsteroidsGame.PLAYER_LOADED_LEVEL, false}
-            };
-            PhotonNetwork.LocalPlayer.SetCustomProperties(props);
-        }
+	public override void OnJoinRoomFailed(short returnCode, string message)
+	{
+		SetActivePanel(selectionPanel.name);
+	}
 
-        public override void OnLeftRoom()
-        {
-            SetActivePanel(SelectionPanel.name);
+	//Creates a room if no room is found
+	public override void OnJoinRandomFailed(short returnCode, string message)
+	{
+		string roomName = "Room " + Random.Range(0, 10000);
 
-            foreach (GameObject entry in playerListEntries.Values)
-            {
-                Destroy(entry.gameObject);
-            }
+		var options = new RoomOptions {MaxPlayers = 8};
+		PhotonNetwork.CreateRoom(roomName, options);
+	}
 
-            playerListEntries.Clear();
-            playerListEntries = null;
-        }
-    
-        public override void OnPlayerEnteredRoom(Player newPlayer)
-        {
-            var entry = Instantiate(PlayerInRoomPrefab, InsideRoomPanel.transform, true);
-            entry.transform.localScale = Vector3.one;
-            entry.GetComponent<PlayerInRoom>().Initialize(newPlayer.ActorNumber, newPlayer.NickName);
+	//Instantiates playerInRoomPrefab for each player present in the room and stores them in a Dictionary with their player number
+	public override void OnJoinedRoom()
+	{
+		SetActivePanel(insideRoomPanel.name);
+		roomNameText.text = PhotonNetwork.CurrentRoom.Name;
 
-            playerListEntries.Add(newPlayer.ActorNumber, entry);
-        }
-    
-    
-        public override void OnPlayerLeftRoom(Player otherPlayer)
-        {
-            Destroy(playerListEntries[otherPlayer.ActorNumber].gameObject);
-            playerListEntries.Remove(otherPlayer.ActorNumber);
-        }
+		if (playerListEntries == null)
+		{
+			playerListEntries = new Dictionary<int, GameObject>();
+		}
 
-        #endregion
+		foreach (var p in PhotonNetwork.PlayerList)
+		{
+			var entry = Instantiate(playerInRoomPrefab, insideRoomPanel.transform, true);
+			entry.transform.localScale = Vector3.one;
+			entry.GetComponent<PlayerInRoom>().Initialize(p.ActorNumber, p.NickName);
 
-        #region UI Methods
-        public void SetPlayerName(string newName)
-        {
-            if (string.IsNullOrEmpty(newName))
-            {
-                Debug.LogError("Player Name is null or empty");
-                return;
-            }
+			playerListEntries.Add(p.ActorNumber, entry);
+		}
 
-            PhotonNetwork.NickName = newName;
-        
-            PlayerPrefs.SetString(playerNamePrefKey, newName);
-        }
+		gameStartButton.interactable = playerListEntries.Count >= 2 && PhotonNetwork.IsMasterClient;
 
-        private void SetActivePanel(string activePanel)
-        {
-            LoginPanel.SetActive(activePanel.Equals(LoginPanel.name));
-            SelectionPanel.SetActive(activePanel.Equals(SelectionPanel.name));
-            JoinRandomRoomPanel.SetActive(activePanel.Equals(JoinRandomRoomPanel.name));
-            InsideRoomPanel.SetActive(activePanel.Equals(InsideRoomPanel.name));
-        }
-    
-        public void OnLoginButtonClicked()
-        {
-            string playerName = PlayerNameInput.text;
+		var props = new Hashtable
+		{
+			{AsteroidsGame.PLAYER_LOADED_LEVEL, false}
+		};
+		PhotonNetwork.LocalPlayer.SetCustomProperties(props);
+	}
 
-            if (!playerName.Equals(""))
-            {
-                PhotonNetwork.LocalPlayer.NickName = playerName;
-                PhotonNetwork.ConnectUsingSettings();
-            }
-            else
-            {
-                Debug.LogError("Player Name is invalid.");
-            }
-        }
-    
-        public void OnJoinRandomRoomButtonClicked()
-        {
-            SetActivePanel(JoinRandomRoomPanel.name);
+	//Destroys the playerInRoomPrefab clones and goes back to the selection screen
+	public override void OnLeftRoom()
+	{
+		SetActivePanel(selectionPanel.name);
 
-            PhotonNetwork.JoinRandomRoom();
-        }
-        
-        public void OnCreateRoomButtonClicked()
-        {
-            string roomName = "Room " + Random.Range(1000, 10000);
-            var options = new RoomOptions {MaxPlayers = 4};
+		foreach (GameObject entry in playerListEntries.Values)
+		{
+			Destroy(entry.gameObject);
+		}
 
-            PhotonNetwork.CreateRoom(roomName, options);
-        }
-        
-        public void OnLeaveGameButtonClicked()
-        {
-            PhotonNetwork.LeaveRoom();
-        }
+		playerListEntries.Clear();
+		playerListEntries = null;
+	}
 
-        public void OnStartGameButtonClicked()
-        {
-            PhotonNetwork.CurrentRoom.IsOpen = false;
-            PhotonNetwork.CurrentRoom.IsVisible = false;
+	//Instantiates a new playerInRoomPrefab and adds the Player to the Dictionary
+	public override void OnPlayerEnteredRoom(Player newPlayer)
+	{
+		var entry = Instantiate(playerInRoomPrefab, insideRoomPanel.transform, true);
+		entry.transform.localScale = Vector3.one;
+		entry.GetComponent<PlayerInRoom>().Initialize(newPlayer.ActorNumber, newPlayer.NickName);
 
-            PhotonNetwork.LoadLevel("Arena");
-        }
-        #endregion
-    }
+		playerListEntries.Add(newPlayer.ActorNumber, entry);
+
+		gameStartButton.interactable = playerListEntries.Count >= 2 && PhotonNetwork.IsMasterClient;
+	}
+
+	//Destroys the playerInRoomPrefab clone and removes the Player from the Dictionary
+	public override void OnPlayerLeftRoom(Player otherPlayer)
+	{
+		Destroy(playerListEntries[otherPlayer.ActorNumber].gameObject);
+		playerListEntries.Remove(otherPlayer.ActorNumber);
+
+		gameStartButton.interactable = playerListEntries.Count >= 2 && PhotonNetwork.IsMasterClient;
+	}
+
+	#endregion
+
+	#region UI Methods
+	//Sets the name inputted on the login screen as the Photon Nickname
+	public void SetPlayerName(string newName)
+	{
+		if (string.IsNullOrEmpty(newName))
+		{
+			Debug.LogError("Player Name is null or empty");
+			return;
+		}
+
+		PhotonNetwork.NickName = newName;
+
+		PlayerPrefs.SetString(playerNamePrefKey, newName);
+	}
+
+	//Toggles on/off the panels to have the correct one active
+	private void SetActivePanel(string activePanel)
+	{
+		loginPanel.SetActive(activePanel.Equals(loginPanel.name));
+		selectionPanel.SetActive(activePanel.Equals(selectionPanel.name));
+		joinRandomRoomPanel.SetActive(activePanel.Equals(joinRandomRoomPanel.name));
+		insideRoomPanel.SetActive(activePanel.Equals(insideRoomPanel.name));
+	}
+
+	//Logs in the player when they click the Login button if the name field isn't empty 
+	public void OnLoginButtonClicked()
+	{
+		string playerName = playerNameInput.text;
+
+		if (!playerName.Equals(""))
+		{
+			PhotonNetwork.LocalPlayer.NickName = playerName;
+			PhotonNetwork.ConnectUsingSettings();
+		}
+		else
+		{
+			Debug.LogError("Player Name is invalid.");
+		}
+	}
+
+	public void OnJoinRoomButtonClicked()
+	{
+		if (roomNameInput.text == string.Empty)
+		{
+			SetActivePanel(joinRandomRoomPanel.name);
+
+			PhotonNetwork.JoinRandomRoom();
+		}
+		else
+		{
+			PhotonNetwork.JoinRoom(roomNameInput.text);
+		}
+	}
+
+	//Creates a new room with the specified name in roomNameInput
+	public void OnCreateRoomButtonClicked()
+	{
+		var options = new RoomOptions {MaxPlayers = 4};
+
+		string roomName;
+		if (newRoomNameInput.text != string.Empty) roomName = newRoomNameInput.text;
+		else roomName = "Room " + Random.Range(0, 10000);
+		
+		PhotonNetwork.CreateRoom(roomName, options);
+	}
+
+	public void OnLeaveGameButtonClicked()
+	{
+		PhotonNetwork.LeaveRoom();
+	}
+
+	//Loads the arena, only the MasterClient can launch the game
+	public void OnStartGameButtonClicked()
+	{
+		PhotonNetwork.CurrentRoom.IsOpen = false;
+		PhotonNetwork.CurrentRoom.IsVisible = false;
+
+		SceneManager.LoadScene("Arena");
+	}
+
+	#endregion
 }

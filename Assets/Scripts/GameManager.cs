@@ -1,74 +1,109 @@
 ﻿using System;
+using System.Collections.Generic;
+using Cinemachine;
+using ExitGames.Client.Photon;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.SceneManagement;
+using UnityEngine.UI;
 
 public class GameManager : MonoBehaviourPunCallbacks
 {
-    [SerializeField] private GameObject playerPrefab;
+	public static GameManager Instance;
+	
+	[SerializeField] private GameObject playerPrefab;
 
-    private void Start()
-    {
-        if (playerPrefab == null)
-        {
-            Debug.LogError("<Color=Red><a>Missing</a></Color> playerPrefab Reference. " +
-                           "Please set it up in GameObject 'Game Manager'",this);
-        }
-        else
-        {
-            if (PlayerController.localPlayerInstance == null)
-            {
-                PhotonNetwork.Instantiate(playerPrefab.name, new Vector3(0, 0, 0), Quaternion.identity, 0);
-            }
-            else
-            {
-                Debug.LogFormat("Ignoring scene load for {0}", SceneManagerHelper.ActiveSceneName);
-            }
-        }
-    }
+	[SerializeField] private GameObject pausePanel;
+	[SerializeField] private GameObject winPanel;
+	[SerializeField] private Text winText;
 
-    public override void OnLeftRoom()
-    {
-        SceneManager.LoadScene("Lobby");
-    }
+	#region Unity Methods
+	//Instantiates the local player and makes the camera follow them
+	private void Start()
+	{
+		if (Instance == null) Instance = this;
+		
+		if (playerPrefab != null)
+		{
+			if (PlayerController.localPlayerInstance == null)
+			{
+				PhotonNetwork.Instantiate(playerPrefab.name, new Vector3(0, 0, 0), Quaternion.identity);
+			}
+		}
 
-    private void LoadArena()
-    {
-        if (!PhotonNetwork.IsMasterClient)
-        {
-            Debug.LogError("PhotonNetwork : Trying to Load a level but we are not the master Client");
-        }
-        
-        Debug.LogFormat("PhotonNetwork : Loading Level : {0}", PhotonNetwork.CurrentRoom.PlayerCount);
-        PhotonNetwork.LoadLevel("Room for " + PhotonNetwork.CurrentRoom.PlayerCount);
-    }
+		var mainCam = Camera.main;
+		if (mainCam != null)
+		{
+			mainCam.GetComponentInChildren<CinemachineVirtualCamera>().m_Follow =
+				PlayerController.localPlayerInstance.transform;
+		}
+		else Debug.Log("Error: No Camera in scene");
+	}
 
-    public override void OnPlayerEnteredRoom(Photon.Realtime.Player newPlayer)
-    {
-        Debug.LogFormat("OnPlayerEnteredRoom() {0}", newPlayer.NickName);
+	private void Update()
+	{
+		if (Input.GetButtonDown("Pause")) pausePanel.SetActive(!pausePanel.activeSelf);
+	}
 
-        if (PhotonNetwork.IsMasterClient)
-        {
-            Debug.LogFormat("OnPlayerEnteredRoom IsMasterClient {0}", PhotonNetwork.IsMasterClient);
+	#endregion
 
-            LoadArena();
-        }
-    }
+	#region PUN Methods
+	public override void OnPlayerEnteredRoom(Photon.Realtime.Player newPlayer)
+	{
+		if (PhotonNetwork.IsMasterClient) LoadArena();
+	}
+	
+	public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
+	{
+		if (PhotonNetwork.PlayerList.Length < 2)
+		{
+			PhotonNetwork.LeaveRoom();
+		}
+	}
+	
+	public override void OnLeftRoom()
+	{
+		SceneManager.LoadScene("Lobby");
+	}
+	#endregion
 
-    public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
-    {
-        Debug.LogFormat("OnPlayerLeftRoom() {0}", otherPlayer.NickName);
+	private static void LoadArena()
+	{
+		PhotonNetwork.LoadLevel("Arena");
+	}
+	
+	public void LeaveRoom()
+	{
+		PhotonNetwork.LeaveRoom();
+	}
 
-        if (PhotonNetwork.IsMasterClient)
-        {
-            Debug.LogFormat("OnPlayerLeftRoom IsMasterClient {0}", PhotonNetwork.IsMasterClient);
-            
-            LoadArena();
-        }
-    }
+	public void CheckPlayerStatus()
+	{
+		var alivePlayer = new List<Player>();
+		foreach (var p in PhotonNetwork.PlayerList)
+		{
+			if (!p.CustomProperties.TryGetValue("Health", out var health)) continue;
+			Debug.Log(p.NickName);
+			Debug.Log((int) health);
+			
+			if ((int) health > 0)
+			{
+				alivePlayer.Add(p);
+			}
+		}
+		
+		if (alivePlayer.Count == 1)
+		{
+			Debug.Log(photonView);
+			photonView.RPC("DisplayWinScreen", RpcTarget.All, alivePlayer[0]);
+		}
+	}
 
-    public void LeaveRoom()
-    {
-        PhotonNetwork.LeaveRoom();
-    }
+	[PunRPC]
+	public void DisplayWinScreen(Player winner)
+	{
+		winText.text = winner.NickName + " won!";
+		winPanel.SetActive(true);
+	}
 }

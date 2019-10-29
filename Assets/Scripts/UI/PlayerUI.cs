@@ -1,4 +1,5 @@
 ﻿using System;
+using Photon.Pun;
 using UnityEngine;
 using UnityEngine.UI;
 
@@ -20,6 +21,9 @@ public class PlayerUI : MonoBehaviour
     {
         transform.SetParent(GameObject.Find("Canvas").GetComponent<Transform>(), false);
         canvasGroup = GetComponent<CanvasGroup>();
+        
+        playerHealthSlider.maxValue = PlayerController.MaxHealth;
+        playerHealthSlider.value = PlayerController.MaxHealth;
     }
 
     public void SetTarget(PlayerController playerTarget)
@@ -31,23 +35,27 @@ public class PlayerUI : MonoBehaviour
         }
 
         target = playerTarget;
+        
         playerNameText.text = target.photonView.Owner.NickName;
         
         targetTransform = target.transform;
         targetRenderer = target.GetComponentInChildren<SpriteRenderer>();
-        Debug.Log(targetRenderer);
     }
-    
-    /*void Update()
-    {
-        playerHealthSlider.value = target.Health;
-    }*/
 
     private void LateUpdate()
     {
-        canvasGroup.alpha = targetRenderer.isVisible ? 1f : 0f;
-        
         targetPosition = targetTransform.position;
         transform.position = Camera.main.WorldToScreenPoint (targetPosition) + screenOffset;
+    }
+
+    public void UpdateHealth()
+    {
+        playerHealthSlider.value = target.Health;
+        if(playerHealthSlider.value <= 0) DestroySelf();
+    }
+    
+    private void DestroySelf()
+    {
+        Destroy(gameObject);
     }
 }

@@ -9,7 +9,7 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1553292300284237406}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: BulletSpawner
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -44,9 +44,9 @@ GameObject:
   - component: {fileID: 8558452745099366293}
   - component: {fileID: 4863613062215466887}
   - component: {fileID: 5574959989681720006}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Player
-  m_TagString: Untagged
+  m_TagString: Player
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
@@ -75,19 +75,19 @@ Rigidbody2D:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 8558452745099366292}
-  m_BodyType: 1
+  m_BodyType: 0
   m_Simulated: 1
   m_UseFullKinematicContacts: 0
   m_UseAutoMass: 0
   m_Mass: 1
   m_LinearDrag: 0
   m_AngularDrag: 0.05
-  m_GravityScale: 1
+  m_GravityScale: 0
   m_Material: {fileID: 6200000, guid: b94797ca04730af4293460b37b368903, type: 2}
   m_Interpolate: 0
   m_SleepingMode: 1
   m_CollisionDetection: 0
-  m_Constraints: 0
+  m_Constraints: 4
 --- !u!70 &8558452745099366295
 CapsuleCollider2D:
   m_ObjectHideFlags: 0
@@ -116,14 +116,11 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0437b2bf8d3a69a4aa17fd77aa551b24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  speed: 0.1
+  speed: 7
   turnSpeed: 0.2
   bullet: {fileID: 1195925096744254297, guid: e07e2468b04fba84090f243fccef6d33, type: 3}
   bulletSpawner: {fileID: 1553292300284237406}
   shootSpeed: 0.1
-  maxHealth: 20
-  attack: 1
-  Health: 0
   playerUiPrefab: {fileID: 2591127850954989722, guid: 93dc5a9053727bb4f9b917bc8c17d575,
     type: 3}
 --- !u!114 &4863613062215466887
@@ -174,7 +171,7 @@ GameObject:
   m_Component:
   - component: {fileID: 8558452745842957431}
   - component: {fileID: 8558452745842957424}
-  m_Layer: 0
+  m_Layer: 8
   m_Name: Sprite
   m_TagString: Untagged
   m_Icon: {fileID: 0}
