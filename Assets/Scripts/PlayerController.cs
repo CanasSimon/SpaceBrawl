@@ -1,5 +1,6 @@
 ﻿using ExitGames.Client.Photon;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 
 public class PlayerController : MonoBehaviourPun, IPunObservable
@@ -26,6 +27,8 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 	[SerializeField] private Transform bulletSpawner;
 	[SerializeField] private float shootSpeed = 0.1f;
 	private float shootCdTimeStamp;
+
+	[SerializeField] private AudioSource shootingAudioSource;
 	#endregion
 
 	#region Stats Variables
@@ -121,6 +124,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 	[PunRPC]
 	private void Shoot()
 	{
+		shootingAudioSource.Play();
 		var newBullet = Instantiate(bullet, bulletSpawner.position, transform.rotation);
 		newBullet.GetComponent<Bullet>().Owner = photonView.Owner;
 	}

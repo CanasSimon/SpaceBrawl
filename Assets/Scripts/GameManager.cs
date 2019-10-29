@@ -11,12 +11,16 @@ using UnityEngine.UI;
 public class GameManager : MonoBehaviourPunCallbacks
 {
 	public static GameManager Instance;
+
+	private CinemachineVirtualCamera mainCamera;
 	
 	[SerializeField] private GameObject playerPrefab;
 
 	[SerializeField] private GameObject pausePanel;
 	[SerializeField] private GameObject winPanel;
 	[SerializeField] private Text winText;
+
+	private bool CanPause;
 
 	#region Unity Methods
 	//Instantiates the local player and makes the camera follow them
@@ -35,26 +39,26 @@ public class GameManager : MonoBehaviourPunCallbacks
 		var mainCam = Camera.main;
 		if (mainCam != null)
 		{
-			mainCam.GetComponentInChildren<CinemachineVirtualCamera>().m_Follow =
-				PlayerController.localPlayerInstance.transform;
+			mainCamera = mainCam.GetComponentInChildren<CinemachineVirtualCamera>();
+			mainCamera.m_Follow = PlayerController.localPlayerInstance.transform;
 		}
 		else Debug.Log("Error: No Camera in scene");
 	}
 
 	private void Update()
 	{
-		if (Input.GetButtonDown("Pause")) pausePanel.SetActive(!pausePanel.activeSelf);
+		if (Input.GetButtonDown("Pause") && CanPause) pausePanel.SetActive(!pausePanel.activeSelf);
 	}
 
 	#endregion
 
 	#region PUN Methods
-	public override void OnPlayerEnteredRoom(Photon.Realtime.Player newPlayer)
+	public override void OnPlayerEnteredRoom(Player newPlayer)
 	{
 		if (PhotonNetwork.IsMasterClient) LoadArena();
 	}
 	
-	public override void OnPlayerLeftRoom(Photon.Realtime.Player otherPlayer)
+	public override void OnPlayerLeftRoom(Player otherPlayer)
 	{
 		if (PhotonNetwork.PlayerList.Length < 2)
 		{
@@ -103,6 +107,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 	[PunRPC]
 	public void DisplayWinScreen(Player winner)
 	{
+		CanPause = false;
 		winText.text = winner.NickName + " won!";
 		winPanel.SetActive(true);
 	}

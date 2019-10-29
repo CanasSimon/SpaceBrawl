@@ -13,14 +13,11 @@ public class PlayerUI : MonoBehaviour
     [SerializeField] private Vector3 screenOffset = new Vector3(0f,2);
     
     private Transform targetTransform;
-    private SpriteRenderer targetRenderer;
-    private CanvasGroup canvasGroup;
     private Vector2 targetPosition;
     
     void Awake()
     {
         transform.SetParent(GameObject.Find("Canvas").GetComponent<Transform>(), false);
-        canvasGroup = GetComponent<CanvasGroup>();
         
         playerHealthSlider.maxValue = PlayerController.MaxHealth;
         playerHealthSlider.value = PlayerController.MaxHealth;
@@ -39,7 +36,6 @@ public class PlayerUI : MonoBehaviour
         playerNameText.text = target.photonView.Owner.NickName;
         
         targetTransform = target.transform;
-        targetRenderer = target.GetComponentInChildren<SpriteRenderer>();
     }
 
     private void LateUpdate()
