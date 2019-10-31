@@ -16,10 +16,15 @@ public class GameManager : MonoBehaviourPunCallbacks
 	
 	[SerializeField] private GameObject playerPrefab;
 
+	#region UI Parameters
+	[Header("UI")]
 	[SerializeField] private GameObject pausePanel;
 	[SerializeField] private GameObject winPanel;
 	[SerializeField] private Text winText;
-
+	
+	[SerializeField] private Text pingText;
+	#endregion
+	
 	private bool CanPause;
 
 	#region Unity Methods
@@ -30,7 +35,7 @@ public class GameManager : MonoBehaviourPunCallbacks
 		
 		if (playerPrefab != null)
 		{
-			if (PlayerController.localPlayerInstance == null)
+			if (PlayerController.LocalPlayerInstance == null)
 			{
 				PhotonNetwork.Instantiate(playerPrefab.name, new Vector3(0, 0, 0), Quaternion.identity);
 			}
@@ -40,13 +45,15 @@ public class GameManager : MonoBehaviourPunCallbacks
 		if (mainCam != null)
 		{
 			mainCamera = mainCam.GetComponentInChildren<CinemachineVirtualCamera>();
-			mainCamera.m_Follow = PlayerController.localPlayerInstance.transform;
+			mainCamera.m_Follow = PlayerController.LocalPlayerInstance.transform;
 		}
 		else Debug.Log("Error: No Camera in scene");
 	}
 
 	private void Update()
 	{
+		pingText.text = PhotonNetwork.GetPing() + " ms";
+			
 		if (Input.GetButtonDown("Pause") && CanPause) pausePanel.SetActive(!pausePanel.activeSelf);
 	}
 

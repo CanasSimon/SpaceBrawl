@@ -244,12 +244,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0437b2bf8d3a69a4aa17fd77aa551b24, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  explosion: {fileID: 4141137579783734622, guid: cbc0a2bf5a8d69f479846e16adaee67d,
+    type: 3}
   speed: 7
   turnSpeed: 0.2
   bullet: {fileID: 1195925096744254297, guid: e07e2468b04fba84090f243fccef6d33, type: 3}
   bulletSpawner: {fileID: 1553292300284237406}
   shootSpeed: 0.1
   shootingAudioSource: {fileID: 7470827290875480122}
+  Health: 0
   playerUiPrefab: {fileID: 2591127850954989722, guid: 93dc5a9053727bb4f9b917bc8c17d575,
     type: 3}
 --- !u!114 &4863613062215466887

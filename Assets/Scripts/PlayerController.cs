@@ -5,7 +5,11 @@ using UnityEngine;
 
 public class PlayerController : MonoBehaviourPun, IPunObservable
 {
-	public static GameObject localPlayerInstance;
+	public static GameObject LocalPlayerInstance;
+
+	public Player Owner;
+
+	[SerializeField] private GameObject explosion;
 
 	#region Movement Variables
 	[Header("Movement")] 
@@ -35,7 +39,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 	[Header("Stats")] 
 	public static int MaxHealth = 20;
 
-	public int Health { get; set; }
+	public int Health;
 
 	[SerializeField] private GameObject playerUiPrefab;
 	private PlayerUI playerUi;
@@ -46,7 +50,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 	{
 		if (photonView.IsMine)
 		{
-			localPlayerInstance = gameObject;
+			LocalPlayerInstance = gameObject;
 		}
 
 		DontDestroyOnLoad(gameObject);
@@ -54,6 +58,9 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
 	private void Start()
 	{
+		Owner = photonView.Owner;
+		Debug.Log(Owner.NickName);
+			
 		body = GetComponent<Rigidbody2D>();
 			
 		Health = MaxHealth;
@@ -84,6 +91,14 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 			photonView.RPC("Shoot", RpcTarget.All);
 		}
 	}
+	
+	private void OnDestroy()
+	{
+		var newExplosion = Instantiate(explosion, transform.position, Quaternion.identity);
+		var explosionParticles = newExplosion.GetComponent<ParticleSystem>();
+		Destroy(newExplosion, explosionParticles.main.duration + explosionParticles.main.startLifetimeMultiplier);
+		Destroy(playerUi.gameObject);
+	}
 
 	//Detects if a bullet hits the player
 	private void OnTriggerEnter2D(Collider2D other)
@@ -92,7 +107,6 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 		    Equals(other.GetComponent<Bullet>().Owner, photonView.Owner)) return;
 		
 		Health--;
-		photonView.RPC("UpdateHealth", RpcTarget.All);
 		Destroy(other.gameObject);
 		
 		if(Health <= 0) DestroySelf();
@@ -112,6 +126,8 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 		else
 		{
 			Health = (int) stream.ReceiveNext();
+			UpdateHealth();
+			
 			networkPosition = (Vector3)stream.ReceiveNext();
 			networkRotation = (Quaternion)stream.ReceiveNext();
 
@@ -130,15 +146,12 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 	}
 
 	//Updates all the players' health bars
-	[PunRPC]
 	private void UpdateHealth()
 	{
-		if (photonView.IsMine)
-		{
-			var hashState = new Hashtable {{"Health", Health}};
-			PhotonNetwork.LocalPlayer.SetCustomProperties(hashState);
-		}
-		playerUi.UpdateHealth();
+		var hashState = new Hashtable {{"Health", Health}};
+		Owner?.SetCustomProperties(hashState);
+
+		if (playerUi != null) playerUi.UpdateHealth();
 	}
 	#endregion
 
@@ -162,7 +175,8 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
 	private void DestroySelf()
 	{
+		UpdateHealth();
 		GameManager.Instance.CheckPlayerStatus();
-		PhotonNetwork.Destroy(gameObject);
+		if (photonView.IsMine) PhotonNetwork.Destroy(gameObject);
 	}
 }

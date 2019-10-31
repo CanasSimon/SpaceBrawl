@@ -47,11 +47,5 @@ public class PlayerUI : MonoBehaviour
     public void UpdateHealth()
     {
         playerHealthSlider.value = target.Health;
-        if(playerHealthSlider.value <= 0) DestroySelf();
-    }
-    
-    private void DestroySelf()
-    {
-        Destroy(gameObject);
     }
 }

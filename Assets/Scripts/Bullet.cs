@@ -14,4 +14,9 @@ public class Bullet : MonoBehaviour
     {
         body.velocity = bulletSpeed * Time.deltaTime * transform.up;
     }
+
+    private void OnTriggerExit2D(Collider2D other)
+    {
+        if (other.CompareTag("Destructor")) Destroy(gameObject);
+    }
 }
