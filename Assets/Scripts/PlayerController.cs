@@ -88,7 +88,7 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 		if (Time.time > shootCdTimeStamp && Input.GetButtonDown("Fire1"))
 		{
 			shootCdTimeStamp = Time.time + shootSpeed;
-			photonView.RPC("Shoot", RpcTarget.All);
+			photonView.RPC("Shoot", RpcTarget.All, PhotonNetwork.Time);
 		}
 	}
 	
@@ -138,20 +138,21 @@ public class PlayerController : MonoBehaviourPun, IPunObservable
 
 	//Fire a bullet and send the event to all other clients
 	[PunRPC]
-	private void Shoot()
+	private void Shoot(double shotTime)
 	{
 		shootingAudioSource.Play();
 		var newBullet = Instantiate(bullet, bulletSpawner.position, transform.rotation);
-		newBullet.GetComponent<Bullet>().Owner = photonView.Owner;
+		newBullet.GetComponent<Bullet>().Initialize(photonView.Owner, shotTime);
 	}
 
 	//Updates all the players' health bars
 	private void UpdateHealth()
 	{
-		var hashState = new Hashtable {{"Health", Health}};
-		Owner?.SetCustomProperties(hashState);
-
-		if (playerUi != null) playerUi.UpdateHealth();
+		if (photonView.IsMine)
+		{
+			var hashState = new Hashtable {{"Health", Health}};
+			Owner?.SetCustomProperties(hashState);
+		}
 	}
 	#endregion
 

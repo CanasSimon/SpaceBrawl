@@ -1,4 +1,5 @@
-﻿using Photon.Realtime;
+﻿using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 
 public class Bullet : MonoBehaviour
@@ -9,10 +10,14 @@ public class Bullet : MonoBehaviour
     //To prevent a player from shooting themselves
     public Player Owner { get; set; }
     
-    //Launches the bullet forward
-    private void Start()
+    //Initializes the bullet and sets its owner
+    //Uses shotTime to compensate lag
+    public void Initialize(Player owner, double shotTime)
     {
         body.velocity = bulletSpeed * Time.deltaTime * transform.up;
+        Owner = owner;
+        var nextPos = (Vector3) body.velocity * (float) (PhotonNetwork.Time - shotTime);
+        transform.position += nextPos;
     }
 
     private void OnTriggerExit2D(Collider2D other)

@@ -80,7 +80,7 @@ public class Lobby : MonoBehaviourPunCallbacks
 	{
 		string roomName = "Room " + Random.Range(0, 10000);
 
-		var options = new RoomOptions {MaxPlayers = 8};
+		var options = new RoomOptions {MaxPlayers = 4, BroadcastPropsChangeToAll = true};
 		PhotonNetwork.CreateRoom(roomName, options);
 	}
 
@@ -118,7 +118,7 @@ public class Lobby : MonoBehaviourPunCallbacks
 	{
 		SetActivePanel(selectionPanel.name);
 
-		foreach (GameObject entry in playerListEntries.Values)
+		foreach (var entry in playerListEntries.Values)
 		{
 			Destroy(entry.gameObject);
 		}
@@ -207,7 +207,7 @@ public class Lobby : MonoBehaviourPunCallbacks
 	//Creates a new room with the specified name in roomNameInput
 	public void OnCreateRoomButtonClicked()
 	{
-		var options = new RoomOptions {MaxPlayers = 4};
+		var options = new RoomOptions {MaxPlayers = 4, BroadcastPropsChangeToAll = true};
 
 		string roomName;
 		if (newRoomNameInput.text != string.Empty) roomName = newRoomNameInput.text;

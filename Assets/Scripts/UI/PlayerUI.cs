@@ -1,9 +1,11 @@
 ﻿using System;
+using ExitGames.Client.Photon;
 using Photon.Pun;
+using Photon.Realtime;
 using UnityEngine;
 using UnityEngine.UI;
 
-public class PlayerUI : MonoBehaviour
+public class PlayerUI : MonoBehaviourPunCallbacks
 {
     private PlayerController target;
     
@@ -44,7 +46,7 @@ public class PlayerUI : MonoBehaviour
         transform.position = Camera.main.WorldToScreenPoint (targetPosition) + screenOffset;
     }
 
-    public void UpdateHealth()
+    private void Update()
     {
         playerHealthSlider.value = target.Health;
     }
